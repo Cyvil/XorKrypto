@@ -3,9 +3,9 @@ import java.io.*;
 
 public class OneTimePad {
 
-	 private static String inputFileName = "C:\\Tempo\\2011044.xor";
-//	 private static String inputFileName = "C:\\Tempo\\2011044.xor"; - lokalnie, na moim dysku :)))
-//	 private static String outputFileName = "C:\\Tempo\\wyjscie.txt"; -- nie uzywam jak na razie
+//	 private static String inputFileName = "2011044.xor";
+	 private static String inputFileName = "C:\\Tempo\\2011044.xor"; //- lokalnie, na moim dysku :)))
+//	 private static String outputFileName = "C:\\Tempo\\wyjscie.txt"; //-- nie uzywam jak na razie
 	 
 	 
 	 //Funkcja sprawdz¹jaca czy dana literka jest "dobra" - tj czy nalezy do polskiego alfabetu badz jest czestym znakiem interpunkcyjnym 
@@ -24,7 +24,7 @@ public class OneTimePad {
 	 
 	 public static boolean goodColumn(byte[][] input, byte key, int nr)
 	 {
-		 int tmpBlockSize = input.length;
+		 int tmpBlockSize = input.length - 1;
 		
 		 for (int i = 0; i < tmpBlockSize; i++)
 		 {
@@ -71,14 +71,14 @@ public class OneTimePad {
 	    byte[][] decryptedBytes = new byte[(int) blockSize][(int) length]; //tekst jawny
 	    
 	    byte[][] tempBytes = new byte[((int) blockSize) - 1][256]; //xory poszczegolnych par
-	    byte[] resultBytes = new byte[256]; //takie cos posrednie
+//	    byte[] resultBytes = new byte[256]; //takie cos posrednie
 	    boolean[] goodBytes = new boolean[256]; // tablica booleowska pilnujaca klucza - zeby w kolko nie nadpisywac tych samych pozycji
 	    
 	    //xorujemy j-ty blok z blokiem j+1-tym
 	    
-    	for(int j = 0; j < tempBytes.length;j++)
+    	for(int j = 0; j < tempBytes.length-1;j++)
     	{
-    		for(int i = 0; i < 128; i++)
+    		for(int i = 0; i < 256; i++)
     		{
     			goodBytes[i] = false;
 
@@ -128,7 +128,10 @@ public class OneTimePad {
     						//inicjalizujemy dwoch kandydatow na klucz
    							int temp4 = encryptedBytes[z][i] ^ temp; 
     						int temp5 = encryptedBytes[z+1][i] ^ temp; 
-    						
+    		
+   			//				int temp4 = encryptedBytes[z][i] ^ byteLetter; 
+   			//	    		int temp5 = encryptedBytes[z+1][i] ^ byteLetter; 
+   							
     						//cast na bajty
     						byte temp4b = (byte) temp4;
     						byte temp5b = (byte) temp5;
@@ -142,7 +145,7 @@ public class OneTimePad {
    							else if(goodColumn(encryptedBytes, temp5b, i))
    							{
    								goodBytes[i] = true;
-   								keyBytes[i] = temp4b;
+   								keyBytes[i] = temp5b;
 //   							int temp2 = encryptedBytes[0][i] ^ keyBytes[i];
 //    							if(goodByte((byte) temp2))
 //    	    					resultBytes[i] = (byte) temp2;
@@ -154,37 +157,63 @@ public class OneTimePad {
     		}
     	}
     	
-		//Wypisujemy miejsca w kluczu gdzie znalezlismy fragemnty tego klucza
+    	int counter = 0;
+    	
+		//Wypiujemy klucz, oznaczamy czy zosta³ znaleziony i jego pozycjê
 		for(int i = 0; i < 256; i++)
     	{
+			
+			System.out.print(i + ". ");
+			
     		if(goodBytes[i])
-    			System.out.print("1");
+    		{
+    			System.out.print("jest   ");
+    			counter++;
+    		}
     		else
-    			System.out.print("0");
+    			System.out.print("nie ma ");
+    		
+    		System.out.print(keyBytes[i] + "\n");
     	}
+		
+		
+		//Liczba znalezionych bajtów klucza
+		System.out.print("Liczba dobrych: " + counter);
 		
 		System.out.print("\n\n");
 		
 		//Odszyfrowujemy tekst
-		for(int i=0; i < blockSize; i++)
+		for(int i=0; i < blockSize - 1; i++)
 			for(int j = 0; j < 256; j++)
 			{
-				int temp = encryptedBytes[i][j] ^ keyBytes[i];
+				int temp = encryptedBytes[i][j] ^ keyBytes[j];
 				 decryptedBytes[i][j] = (byte) temp;
 			}
 		
 		//Wypisujemy klucz
-		String str2 = new String(keyBytes);
-		char[] chr2 = str2.toCharArray();
-		System.out.print(chr2);
+//		String str2 = new String(keyBytes);
+//		char[] chr2 = str2.toCharArray();
+//		System.out.print(chr2);
+
+//			System.out.print(keyBytes[i] + " ");
+
 		System.out.print("\n\n");
 		
-		//Wypisujemy tekst jawny
+		//Wypisujemy tekst jawny - tylko "dobre" pozycje
     	for(int i = 0; i < blockSize; i++)
     	{
-		String str3 = new String(decryptedBytes[i]);
-    	char[] chr3 = str3.toCharArray();
-    	System.out.print(chr3);
+    	System.out.print("\n Blok " + i + ": \n");	
+	//	String str3 = new String(decryptedBytes[i]);
+    //	char[] chr3 = str3.toCharArray();
+    //	System.out.print(chr3);
+    	for(int j = 0; j <256; j++)
+    	{
+    		if(goodBytes[j])
+    			System.out.print((char) decryptedBytes[i][j]);
+    		else
+    			System.out.print(" ");
+    	}
+    	
     	}
     	
     	System.out.print("\n");
